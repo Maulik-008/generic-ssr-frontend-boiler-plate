@@ -1,0 +1,48 @@
+import type { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'StudyClock.com - Pomodoro Timer & Focus Clock',
+    short_name: 'StudyClock',
+    description:
+      "Boost your academic success with StudyClock.com's elegant dark mode focus timer. Features include pomodoro technique, countdown timer, and beautiful visual themes.",
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#000000',
+    theme_color: '#6366f1',
+    orientation: 'any',
+    scope: '/',
+    icons: [
+      {
+        src: '/favicon.ico',
+        sizes: '64x64 32x32 24x24 16x16',
+        type: 'image/x-icon',
+      },
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'maskable',
+      },
+    ],
+    categories: ['productivity', 'education', 'utilities'],
+  };
+}

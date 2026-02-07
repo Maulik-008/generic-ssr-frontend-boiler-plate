@@ -1,0 +1,568 @@
+'use client';
+import React, { useState } from 'react';
+import {
+  Timer,
+  Clock,
+  Target,
+  Watch,
+  Menu,
+  X,
+  Home,
+  Info,
+  BookOpen,
+  ChevronDown,
+  ShoppingCart,
+  ListTodo,
+  Brain,
+  Download,
+} from 'lucide-react';
+
+import Link from 'next/link';
+import { usePathname as useLocation } from 'next/navigation';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
+import { showPWAPopup } from '@/utils/pwaPopup';
+
+interface NavigationProps {
+  currentMode?: 'timer' | 'countdown' | 'pomodoro' | 'clock';
+  onModeChange?: (mode: 'timer' | 'countdown' | 'pomodoro' | 'clock') => void;
+  pomodoroSubMode?: 'pomodoro' | 'shortBreak' | 'longBreak';
+  onPomodoroSubModeChange?: (
+    subMode: 'pomodoro' | 'shortBreak' | 'longBreak',
+  ) => void;
+}
+
+const Navigation: React.FC<NavigationProps> = ({
+  currentMode,
+  onModeChange,
+  pomodoroSubMode = 'pomodoro',
+  onPomodoroSubModeChange,
+}) => {
+  const location = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Helper to determine if a path is active
+  const isActive = (path: string) => {
+    return location === path;
+  };
+
+  // Main timer navigation items
+  const timerItems = [
+    {
+      name: 'Study Timer',
+      path: '/study-timer',
+      icon: <Clock className='w-4 h-4' />,
+      color: 'from-cyan-500 to-blue-600',
+      shadowColor: 'shadow-cyan-500/30',
+    },
+    {
+      name: 'Clock Timer',
+      path: '/study-clock-timer',
+      icon: <Watch className='w-4 h-4' />,
+      color: 'from-blue-500 to-indigo-600',
+      shadowColor: 'shadow-blue-500/30',
+    },
+    {
+      name: 'Countdown',
+      path: '/counter',
+      icon: <Timer className='w-4 h-4' />,
+      color: 'from-purple-500 to-pink-600',
+      shadowColor: 'shadow-purple-500/30',
+    },
+    {
+      name: 'Stopwatch',
+      path: '/online-stopwatch',
+      icon: <Watch className='w-4 h-4' />,
+      color: 'from-emerald-500 to-teal-600',
+      shadowColor: 'shadow-emerald-500/30',
+    },
+    {
+      name: 'Pomodoro',
+      path: '/pomodoro-timer',
+      icon: <Target className='w-4 h-4' />,
+      color: 'from-red-500 to-rose-600',
+      shadowColor: 'shadow-red-500/30',
+    },
+  ];
+
+  // Resources submenu items
+  const resourcesItems = [
+    {
+      name: 'Study Todo List',
+      path: '/study-todo-list',
+      icon: <ListTodo className='w-4 h-4' />,
+      description: 'Manage study tasks',
+    },
+    {
+      name: 'Study Guide',
+      path: '/study-clock-guide',
+      icon: <BookOpen className='w-4 h-4' />,
+      description: 'Learn study techniques',
+    },
+    {
+      name: 'Timer Reviews',
+      path: '/study-clock-recommendations',
+      icon: <ShoppingCart className='w-4 h-4' />,
+      description: 'Best physical timers',
+    },
+    {
+      name: 'Pomodoro Technique',
+      path: '/pomodoro-technique',
+      icon: <Target className='w-4 h-4' />,
+      description: 'Master the technique',
+    },
+    {
+      name: 'End Time Timer',
+      path: '/end-time-timer',
+      icon: <Timer className='w-4 h-4' />,
+      color: 'from-orange-500 to-amber-600',
+      shadowColor: 'shadow-orange-500/30',
+    },
+    {
+      name: 'Focus Test',
+      path: '/focus-test',
+      icon: <Brain className='w-4 h-4' />,
+      description: 'Discover your focus type',
+    },
+    {
+      name: 'About Us',
+      path: '/about-us',
+      icon: <Info className='w-4 h-4' />,
+      description: 'Learn about StudyClock',
+    },
+  ];
+
+  // Check if any resources item is active
+  const isResourcesActive = resourcesItems.some((item) => isActive(item.path));
+
+  // Handle click on timer mode button
+  const handleModeClick = (
+    mode: 'timer' | 'countdown' | 'pomodoro' | 'clock' | 'stopwatch',
+  ) => {
+    if (onModeChange) {
+      // Only pass modes that the parent component can handle
+      const validMode = ['timer', 'countdown', 'pomodoro', 'clock'].includes(
+        mode,
+      )
+        ? (mode as 'timer' | 'countdown' | 'pomodoro' | 'clock')
+        : 'timer';
+      onModeChange(validMode);
+    }
+  };
+
+  return (
+    <>
+      {/* Custom scrollbar styles */}
+      <style>{`
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 5px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(99, 102, 241, 0.5);
+        border-radius: 10px;
+      }
+      
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(99, 102, 241, 0.7);
+      }
+    `}</style>
+      <header className='fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 py-3'>
+        <div className='max-w-7xl mx-auto'>
+          <nav className='relative grid grid-cols-[1fr_auto_1fr] items-center gap-3 bg-black/80 backdrop-blur-xl rounded-2xl shadow-xl px-4 sm:px-5 md:px-6 py-3'>
+            {/* Logo */}
+            <div className='flex-shrink-0 justify-self-start'>
+              <Link
+                href='/'
+                className='text-lg sm:text-xl md:text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 hover:opacity-90 transition-opacity'
+              >
+                StudyClock.com
+              </Link>
+            </div>
+
+            {/* Desktop Navigation - Only show on large screens, not tablets */}
+            <div className='hidden lg:flex items-center space-x-1 justify-self-center bg-black/70 backdrop-blur-xl rounded-xl border border-white/15 shadow-lg p-1'>
+              {timerItems.map((item) => {
+                const active = isActive(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    href={item.path}
+                    onClick={() => {
+                      if (onModeChange) {
+                        // Map path to mode
+                        if (item.path === '/study-timer')
+                          handleModeClick('timer');
+                        else if (item.path === '/counter')
+                          handleModeClick('countdown');
+                        else if (item.path === '/pomodoro-timer')
+                          handleModeClick('pomodoro');
+                        else if (item.path === '/study-clock-timer')
+                          handleModeClick('clock');
+                        else if (item.path === '/online-stopwatch')
+                          handleModeClick('stopwatch');
+                      }
+                    }}
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-2 rounded-lg whitespace-nowrap transition-all duration-300 hover:bg-white/10',
+                      active
+                        ? `bg-gradient-to-r ${item.color} shadow-lg ${item.shadowColor}`
+                        : 'bg-transparent',
+                    )}
+                  >
+                    {item.icon}
+                    <span className='text-white/90 text-sm font-medium'>
+                      {item.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Desktop Resources Dropdown & Home */}
+            <div className='hidden lg:flex items-center space-x-2 justify-self-end pl-4 border-l border-white/10'>
+              {/* Home Link */}
+              <Link
+                href='/'
+                className={cn(
+                  'flex items-center gap-1 px-3 py-2 rounded-lg text-white/70 hover:text-white/90 transition-colors',
+                  isActive('/') ? 'text-white/90 bg-white/10' : '',
+                )}
+              >
+                <Home className='w-4 h-4' />
+                <span className='text-sm'>Home</span>
+              </Link>
+
+              {/* Resources Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      'flex items-center gap-1 px-3 py-2 rounded-lg text-white/70 hover:text-white/90 transition-colors',
+                      isResourcesActive ? 'text-white/90 bg-white/10' : '',
+                    )}
+                  >
+                    <BookOpen className='w-4 h-4' />
+                    <span className='text-sm'>Resources</span>
+                    <ChevronDown className='w-3 h-3' />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align='end'
+                  className='w-64 bg-gray-900/98 backdrop-blur-xl border border-white/20 shadow-2xl'
+                >
+                  {resourcesItems.map((item) => (
+                    <DropdownMenuItem key={item.path} asChild className='p-0'>
+                      <Link
+                        href={item.path}
+                        className={cn(
+                          'flex items-start gap-3 p-3 cursor-pointer transition-all duration-200 rounded-md mx-1 my-1',
+                          isActive(item.path)
+                            ? 'bg-cyan-500/20 text-cyan-100 border border-cyan-500/30'
+                            : 'text-gray-200 hover:text-white hover:bg-white/10',
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0',
+                            isActive(item.path)
+                              ? 'bg-cyan-500/30 text-cyan-200'
+                              : 'bg-white/10 text-gray-300',
+                          )}
+                        >
+                          {item.icon}
+                        </div>
+                        <div className='flex-1'>
+                          <div className='font-medium text-sm'>{item.name}</div>
+                          <div
+                            className={cn(
+                              'text-xs mt-0.5',
+                              isActive(item.path)
+                                ? 'text-cyan-200/80'
+                                : 'text-gray-400',
+                            )}
+                          >
+                            {item.description}
+                          </div>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator className='bg-white/10' />
+                  <DropdownMenuItem
+                    className='p-0 cursor-pointer'
+                    onClick={() => showPWAPopup()}
+                  >
+                    <div className='flex items-start gap-3 p-3 transition-all duration-200 rounded-md mx-1 my-1 text-gray-200 hover:text-white hover:bg-white/10 w-full'>
+                      <div className='w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-r from-purple-500 to-pink-600 text-white'>
+                        <Download className='w-4 h-4' />
+                      </div>
+                      <div className='flex-1'>
+                        <div className='font-medium text-sm'>
+                          Install App (Offline Mode)
+                        </div>
+                        <div className='text-xs mt-0.5 text-gray-400'>
+                          Install PWA to use offline
+                        </div>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+            {/* Mobile Menu Trigger - Show on tablets too */}
+            <div className='lg:hidden justify-self-end col-start-3'>
+              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                <SheetTrigger asChild>
+                  <button
+                    className='p-3 md:p-4 bg-red-500 hover:bg-red-600 transition-all rounded-xl shadow-lg shadow-red-500/30'
+                    aria-label='Menu'
+                  >
+                    <Menu
+                      className='h-6 w-6 md:h-7 md:w-7 text-white'
+                      strokeWidth={2.5}
+                    />
+                  </button>
+                </SheetTrigger>
+                <SheetContent
+                  side='right'
+                  className='w-[80%] sm:w-[400px] md:w-[450px] bg-black/95 backdrop-blur-xl border-white/10 p-0 overflow-hidden'
+                >
+                  <div className='flex flex-col h-full overflow-y-auto custom-scrollbar px-5 pt-2 pb-6'>
+                    {/* Mobile Logo */}
+                    <div className='flex items-center justify-between sticky top-0 py-4 md:py-5 bg-black/80 backdrop-blur-md z-10 mb-2'>
+                      <span className='text-lg md:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500'>
+                        StudyClock.com
+                      </span>
+                      <SheetClose className='rounded-full p-2 md:p-3 hover:bg-white/10'>
+                        <X className='h-6 w-6 md:h-7 md:w-7 text-white' />
+                      </SheetClose>
+                    </div>
+
+                    {/* Mobile Timer Navigation */}
+                    <div className='mt-6'>
+                      <h3 className='text-sm md:text-base uppercase text-white/70 font-bold mb-3 px-1'>
+                        Timers
+                      </h3>
+                      {onModeChange && location === '/' && (
+                        <div className='mb-4 flex justify-center items-center gap-4 bg-black/70 p-3 rounded-xl border border-white/10'>
+                          <h4 className='text-sm text-white/90 font-medium'>
+                            Current Mode:
+                          </h4>
+                          <div className='flex gap-3'>
+                            <button
+                              onClick={() => {
+                                onModeChange('pomodoro');
+                                setIsMenuOpen(false);
+                              }}
+                              className={cn(
+                                'flex items-center justify-center p-2 rounded-lg transition-all',
+                                currentMode === 'pomodoro'
+                                  ? 'bg-gradient-to-r from-red-500 to-rose-600 shadow-md'
+                                  : 'bg-white/10',
+                              )}
+                            >
+                              <Target className='w-5 h-5 text-white' />
+                            </button>
+                            <button
+                              onClick={() => {
+                                onModeChange('timer');
+                                setIsMenuOpen(false);
+                              }}
+                              className={cn(
+                                'flex items-center justify-center p-2 rounded-lg transition-all',
+                                currentMode === 'timer'
+                                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 shadow-md'
+                                  : 'bg-white/10',
+                              )}
+                            >
+                              <Clock className='w-5 h-5 text-white' />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
+                        {timerItems.map((item) => (
+                          <SheetClose asChild key={item.path}>
+                            <Link
+                              href={item.path}
+                              onClick={() => {
+                                if (onModeChange) {
+                                  // Map path to mode
+                                  if (item.path === '/study-timer')
+                                    handleModeClick('timer');
+                                  else if (item.path === '/counter')
+                                    handleModeClick('countdown');
+                                  else if (item.path === '/pomodoro-timer')
+                                    handleModeClick('pomodoro');
+                                  else if (item.path === '/study-clock-timer')
+                                    handleModeClick('clock');
+                                }
+                              }}
+                              className={cn(
+                                'flex flex-col items-center p-4 rounded-xl bg-black/80 border border-white/20 shadow-md transition-all hover:shadow-lg',
+                                isActive(item.path)
+                                  ? `ring-2 ring-${item.color
+                                      .split(' ')[1]
+                                      .replace(
+                                        'to-',
+                                        '',
+                                      )}/70 shadow-lg shadow-${item.color
+                                      .split(' ')[1]
+                                      .replace('to-', '')}/30`
+                                  : '',
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  'w-12 h-12 rounded-full flex items-center justify-center mb-2 shadow-md',
+                                  `bg-gradient-to-r ${item.color}`,
+                                )}
+                              >
+                                {item.icon}
+                              </div>
+                              <span className='text-white text-sm font-medium'>
+                                {item.name}
+                              </span>
+                            </Link>
+                          </SheetClose>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Mobile Home Link */}
+                    <div className='mt-8'>
+                      <h3 className='text-sm md:text-base uppercase text-white/70 font-bold mb-3 px-1'>
+                        Navigation
+                      </h3>
+                      <div className='space-y-2'>
+                        <SheetClose asChild>
+                          <Link
+                            href='/'
+                            className={cn(
+                              'flex items-center gap-3 px-4 py-3 rounded-xl w-full border transition-all',
+                              isActive('/')
+                                ? 'bg-blue-900/30 text-white border-blue-500/30 shadow-md'
+                                : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent',
+                            )}
+                          >
+                            <div className='w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-600 flex items-center justify-center shadow-md'>
+                              <Home className='w-5 h-5 text-white' />
+                            </div>
+                            <span className='font-medium'>Home</span>
+                          </Link>
+                        </SheetClose>
+
+                        <SheetClose asChild>
+                          <Link
+                            href='/online-stopwatch'
+                            className={cn(
+                              'flex items-center gap-3 px-4 py-3 rounded-xl w-full border transition-all',
+                              isActive('/online-stopwatch')
+                                ? 'bg-emerald-900/30 text-white border-emerald-500/30 shadow-md'
+                                : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent',
+                            )}
+                          >
+                            <div className='w-10 h-10 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 flex items-center justify-center shadow-md'>
+                              <Watch className='w-5 h-5 text-white' />
+                            </div>
+                            <span className='font-medium'>Stopwatch</span>
+                          </Link>
+                        </SheetClose>
+                      </div>
+                    </div>
+
+                    {/* Mobile Resources Navigation */}
+                    <div className='mt-8'>
+                      <h3 className='text-sm md:text-base uppercase text-white/70 font-bold mb-3 px-1'>
+                        Resources
+                      </h3>
+                      <div className='space-y-2'>
+                        {resourcesItems.map((item) => (
+                          <SheetClose asChild key={item.path}>
+                            <Link
+                              href={item.path}
+                              className={cn(
+                                'flex items-center gap-3 px-4 py-4 rounded-xl w-full border transition-all',
+                                isActive(item.path)
+                                  ? 'bg-blue-900/30 text-white border-blue-500/30 shadow-md'
+                                  : 'text-white/80 hover:text-white hover:bg-white/10 border-transparent',
+                              )}
+                            >
+                              <div className='w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-600 flex items-center justify-center shadow-md'>
+                                {item.icon}
+                              </div>
+                              <div className='flex-1'>
+                                <div className='font-medium'>{item.name}</div>
+                                <div className='text-xs text-white/70 mt-1'>
+                                  {item.description}
+                                </div>
+                              </div>
+                            </Link>
+                          </SheetClose>
+                        ))}
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => {
+                              showPWAPopup();
+                              setIsMenuOpen(false);
+                            }}
+                            className='flex items-center gap-3 px-4 py-4 rounded-xl w-full border transition-all text-white/80 hover:text-white hover:bg-white/10 border-transparent'
+                          >
+                            <div className='w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-600 flex items-center justify-center shadow-md'>
+                              <Download className='w-5 h-5 text-white' />
+                            </div>
+                            <div className='flex-1 text-left'>
+                              <div className='font-medium'>
+                                Install App (Offline Mode)
+                              </div>
+                              <div className='text-xs text-white/70 mt-1'>
+                                Install PWA to use offline
+                              </div>
+                            </div>
+                          </button>
+                        </SheetClose>
+                      </div>
+                    </div>
+
+                    {/* Bottom Info */}
+                    <div className='mt-auto pt-8 pb-4 text-center'>
+                      <p className='text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 font-bold'>
+                        StudyClock.com
+                      </p>
+                      <p className='text-white/60 text-xs mt-1'>
+                        Focus Better, Study Smarter
+                      </p>
+                    </div>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+
+            {/* Removed mobile timer selection buttons as requested */}
+          </nav>
+        </div>
+      </header>
+    </>
+  );
+};
+
+export default Navigation;

@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Service Worker Reset - StudyClock</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px 20px;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        max-width: 600px;
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 28px;
+      }
+      .button {
+        background: white;
+        color: #667eea;
+        border: none;
+        padding: 15px 30px;
+        font-size: 16px;
+        font-weight: 600;
+        border-radius: 10px;
+        cursor: pointer;
+        margin: 10px 5px;
+        transition: all 0.3s;
+      }
+      .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      }
+      .button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .log {
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .log-entry {
+        margin: 5px 0;
+      }
+      .success {
+        color: #4ade80;
+      }
+      .error {
+        color: #f87171;
+      }
+      .info {
+        color: #60a5fa;
+      }
+      .warning {
+        color: #fbbf24;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔧 Service Worker Reset Tool</h1>
+      <p>
+        Use this tool to completely reset and reinstall the PWA service worker
+        for StudyClock.
+      </p>
+
+      <div>
+        <button class="button" id="unregisterBtn">
+          1. Unregister All Service Workers
+        </button>
+        <button class="button" id="clearCacheBtn">2. Clear All Caches</button>
+        <button class="button" id="reloadBtn" disabled>3. Reload App</button>
+      </div>
+
+      <div class="log" id="log"></div>
+    </div>
+
+    <script>
+      const log = document.getElementById('log');
+      const unregisterBtn = document.getElementById('unregisterBtn');
+      const clearCacheBtn = document.getElementById('clearCacheBtn');
+      const reloadBtn = document.getElementById('reloadBtn');
+
+      function addLog(message, type = 'info') {
+        const entry = document.createElement('div');
+        entry.className = `log-entry ${type}`;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        log.appendChild(entry);
+        log.scrollTop = log.scrollHeight;
+      }
+
+      async function unregisterServiceWorkers() {
+        unregisterBtn.disabled = true;
+        addLog('Starting service worker unregistration...', 'info');
+
+        if (!('serviceWorker' in navigator)) {
+          addLog('Service Worker not supported in this browser', 'error');
+          return;
+        }
+
+        try {
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
+
+          if (registrations.length === 0) {
+            addLog('No service workers found to unregister', 'warning');
+          } else {
+            addLog(`Found ${registrations.length} service worker(s)`, 'info');
+
+            for (const registration of registrations) {
+              await registration.unregister();
+              addLog(
+                `✓ Unregistered service worker: ${registration.scope}`,
+                'success',
+              );
+            }
+          }
+
+          addLog('All service workers unregistered successfully!', 'success');
+          clearCacheBtn.disabled = false;
+        } catch (error) {
+          addLog(`Error: ${error.message}`, 'error');
+          unregisterBtn.disabled = false;
+        }
+      }
+
+      async function clearAllCaches() {
+        clearCacheBtn.disabled = true;
+        addLog('Starting cache cleanup...', 'info');
+
+        if (!('caches' in window)) {
+          addLog('Cache API not supported in this browser', 'error');
+          return;
+        }
+
+        try {
+          const cacheNames = await caches.keys();
+
+          if (cacheNames.length === 0) {
+            addLog('No caches found to clear', 'warning');
+          } else {
+            addLog(`Found ${cacheNames.length} cache(s)`, 'info');
+
+            for (const cacheName of cacheNames) {
+              await caches.delete(cacheName);
+              addLog(`✓ Deleted cache: ${cacheName}`, 'success');
+            }
+          }
+
+          addLog('All caches cleared successfully!', 'success');
+          addLog(
+            'Now close this tab and reopen the app with a HARD REFRESH (Ctrl+Shift+R)',
+            'info',
+          );
+          reloadBtn.disabled = false;
+        } catch (error) {
+          addLog(`Error: ${error.message}`, 'error');
+          clearCacheBtn.disabled = false;
+        }
+      }
+
+      function reloadApp() {
+        addLog('Reloading app with cache bypass...', 'info');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      }
+
+      unregisterBtn.addEventListener('click', unregisterServiceWorkers);
+      clearCacheBtn.addEventListener('click', clearAllCaches);
+      reloadBtn.addEventListener('click', reloadApp);
+
+      // Initial status check
+      addLog('Service Worker Reset Tool Ready', 'success');
+      addLog('Click "1. Unregister All Service Workers" to start', 'info');
+
+      // Check current status
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          if (regs.length > 0) {
+            addLog(
+              `⚠ Found ${regs.length} active service worker(s)`,
+              'warning',
+            );
+            regs.forEach((reg, i) => {
+              addLog(
+                `  SW ${i + 1}: ${reg.active ? 'Active' : reg.waiting ? 'Waiting' : 'Installing'}`,
+                'info',
+              );
+            });
+          }
+        });
+      }
+
+      if ('caches' in window) {
+        caches.keys().then((keys) => {
+          if (keys.length > 0) {
+            addLog(`⚠ Found ${keys.length} cache(s) stored`, 'warning');
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
